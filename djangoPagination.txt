@@ -1,0 +1,164 @@
+
+view.py
+===========================================================
+ zone_list = Zone.objects.all().order_by('-id')
+            paginator = Paginator(zone_list, 5)
+
+            try:
+                page = int(request.GET.get('page', '1'))
+            except:
+                page = 1
+
+            try:
+                posts = paginator.page(page)
+            except(EmptyPage, InvalidPage):
+                posts = paginator.page(paginator.num_pages)
+
+            context = {
+                'zone': zone_list,
+                'posts': posts,
+                'title': "Zone List",
+            }
+            return render(request, 'zone_list.html', context)
+
+--------------------------------------------------------------------------
+
+template.html
+=========================================================================
+<table id="example" class="table table-striped table-bordered" cellspacing="0" width="100%">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for data in posts.object_list %}
+        <tr>
+
+            <td>{{ data.code }}</td>
+            <td>{{ data.name}}</td>
+            <td><a class="" href="{% url 'wasa:zone_edit' data.id %}" title="">Update</a></td>
+        </tr>
+        {% endfor %}
+
+        </tr>
+
+        </tbody>
+    </table>
+    <ul class="pagination">
+          <li class="page-item">    <!-- Jump to First Page -->
+            {% if posts.number != 1 %}
+               <li class="previous">
+                  <a href="?page=1">
+                    <span aria-hidden="true">First</span></a>
+            {% else %}
+                <li class="previous disabled">
+                <a><span aria-hidden="true">First</span></a>
+            {% endif %}
+          </li>
+
+          <li class="page-item">  <!-- Jump to Prvious Page -->
+            {% if posts.has_previous %}
+               <li class="previous"> <a href="?page={{ posts.previous_page_number }}">
+               <span aria-hidden="true">Previous</span></a>
+            {% else %}
+                <li class="previous disabled"><a>Previous</a>
+            {% endif %}
+          </li>
+
+          {% if posts.has_previous %}
+          <li class="page-item">  <!-- Show Previous 4 page numbers -->
+              <li class="previous"> <a class = "skip_prev" href = "">...</a></li>
+          {% else %}
+                <li class="next disabled"><a>...</a>
+          {% endif %}
+          </li>
+
+          {% for i in "12345" %}
+        <!-- Change the range ("12345") according to your choice to show numbers -->
+            <li class="pg" data = {{i}}><a class = "page_number" href=""></a>
+          {% endfor %}
+
+          {% if posts.has_next %}
+          <li class="page-item">  <!-- Show next 4 page numbers -->
+              <li class="previous"> <a class = "skip_next" href = "">...</a></li>
+          {% else %}
+                <li class="next disabled"><a>...</a>
+          {% endif %}
+          </li>
+
+          <li class="page-item">  <!-- Jump to Next Page -->
+            {% if posts.has_next %}
+              <li class="previous"> <a href="?page={{ posts.next_page_number }}">Next</a></li>
+            {% else %}
+                <li class="next disabled"><a>Next</a>
+            {% endif %}
+          </li>
+
+          <li class="page-item">  <!-- Jump to Last Page -->
+            {% if posts.number != posts.paginator.num_pages %}
+              <li class="previous"> <a href="?page={{ posts.paginator.num_pages }}">Last</a></li>
+            {% else %}
+                <li class="next disabled"><a>Last</a>
+            {% endif %}
+          </li>
+
+        </ul>
+    <input type="hidden" id="total_pages" value="{{posts.paginator.num_pages}}">
+    <input type="hidden" id="current_page" value="{{posts.number}}">
+-------------------------------------------------------------------------------------------------
+javascript
+==================================================================================================
+ $(document).ready(function () {
+
+        $('#example').DataTable();
+        var skip_pages = 5; //change your number accordingly you want to show numbers
+
+        var total_pages = $('#total_pages').val();
+
+        var current_page = $('#current_page').val();
+        var factor = Math.floor(current_page/skip_pages);
+
+        $(".page_number").each(function(i, obj) {   //Showing the discrete numbers
+            var page = factor*(skip_pages) + i + 1;
+            if(current_page%skip_pages == 0)
+              page = (factor-1)*skip_pages + i + 1;
+            if(page - 1 < total_pages){
+              $(this).html(page);
+              $(this).attr("href", "?page=" + page);
+            }
+            else{
+              var x = i+1;
+              $('li[data=' + x + ']').css("display", "none");
+            }
+        });
+        var page = current_page%skip_pages;
+        if(page == 0)
+          page = skip_pages;
+        $('li[data=' + page + ']').each(function(){   //Deciding the active class
+          $('li[data=' + page + ']').addClass("active");
+        });
+
+        $(".skip_next").click(function(){   //Skip next ... Function
+          if(current_page%skip_pages == 0)
+            factor = factor-1;
+          var page = (factor+1)*skip_pages + 1;
+          if(page < total_pages)
+            $(this).attr("href", "?page=" + page);
+          else
+            $(this).attr("href", "?page=" + total_pages);
+        })
+        $(".skip_prev").click(function(){ //Skip Previous ... Function
+          if(current_page%skip_pages == 0)
+            factor = factor-1;
+          var page = skip_pages*(factor-1) + 1;
+          if(page > 0)
+            $(this).attr("href", "?page=" + page);
+          else
+            $(this).attr("href", "?page=" + "1");
+        })
+
+    })
