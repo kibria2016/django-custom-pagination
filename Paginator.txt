@@ -1,1 +1,0 @@
-https://djangopy.org/how-to/pagination-with-django/
