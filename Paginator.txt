@@ -1,0 +1,2 @@
+https://djangopy.org/how-to/pagination-with-django/
+http://blog.appliedinformaticsinc.com/how-to-build-custom-pagination-in-django-to-overcome-django-paginator-drawbacks/
